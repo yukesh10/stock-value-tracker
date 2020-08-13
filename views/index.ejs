@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Raleway:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.1/css/all.min.css"
+      integrity="sha512-xA6Hp6oezhjd6LiLZynuukm80f8BoZ3OpcEYaqKoCV3HKQDrYjDE1Gu8ocxgxoXmwmSzM4iqPvCsOkQNiu41GA=="
+      crossorigin="anonymous"
+    />
+    <link rel="stylesheet" type="text/css" href="style.css" />
+    <title>Stock Value Tracker</title>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>Stock Price Tracker</h1>
+      </header>
+      <form class="input" method="POST" action="/addStock">
+        <input
+          type="text"
+          name="stock"
+          class="userInput"
+          placeholder="Stock name..."
+          id="stockInput"
+          required
+        />
+        <input
+          type="number"
+          name="min_value"
+          class="userInput minMaxBox"
+          placeholder="Min Value"
+          id="minValueInput"
+          required
+        />
+        <input
+          type="number"
+          name="max_value"
+          class="userInput minMaxBox"
+          placeholder="Max Value"
+          id="maxValueInput"
+          required
+        />
+        <button class="addBtn">Add</button>
+      </form>
+      <p class="errorInput"></p>
+      <table id="stocks">
+        <tr id="tableHead">
+          <th>Symbol</th>
+          <th>Company Name</th>
+          <th>Price</th>
+          <th>Change</th>
+          <th>Volume</th>
+          <th>Min Value</th>
+          <th>Max Value</th>
+          <th>Action</th>
+        </tr>
+        <% if (allStocks){ %> <% allStocks.forEach((stock)=>{ %>
+        <tr>
+          <td><%= stock.stockName %></td>
+          <td><%= stock.companyName %></td>
+          <td><%= stock.price %></td>
+          <td><%= stock.change %></td>
+          <td><%= stock.volume %></td>
+          <td><%= stock.min_value %></td>
+          <td><%= stock.max_value %></td>
+          <td class="lastCol">
+            <div class="updateBtn"><i class="fas fa-sync"></i></div>
+            <div class="deleteBtn"><i class="fa fa-trash"></i></div>
+          </td>
+        </tr>
+        <% }) %> <% } %>
+      </table>
+    </div>
+    <script src="main.js"></script>
+  </body>
+</html>
