@@ -2,11 +2,103 @@
     padding: 0;
     margin: 0;
     font-family: 'Raleway', sans-serif;
+    letter-spacing: 1.5px;
 }
 
-.container{
+body{
+    background-color: #65ccb8;
+    min-height: 100vh;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
+}
+
+.container{
+    background-color: white;
+    width: 70%;
+    height: 60vh;
+    border-radius: 20px;
+    display: grid;
+    grid-template-columns: 60% 40%;
+}
+
+.formSection{
+    background-color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border-radius: 20px;
+}
+
+.formSection h1{
+    margin-top: 4rem;
+    /* margin-bottom: 5rem; */
+    font-weight: 400;
+    font-size: 3rem;
+    text-transform: uppercase;
+    color: #56a595;
+    /* text-decoration: underline; */
+}
+
+.formSection h3{
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+    font-weight: 400;
+}
+
+.formSection div{
+    line-height: 5rem;
+}
+
+.formSection div input{
+    height: 3rem;
+    width: 30rem;
+    background-color: rgb(218, 207, 207);
+    border-radius: 3px;
+    border-style: none;
+    padding: 0 1rem;
+}
+
+.formSection button{
+    border-style: none;
+    background-color: #56a595;
+    height: 2rem;
+    width: 32rem;
+    margin-top: 1rem;
+}
+
+.errorPassword{
+    color: red;
+    margin-top: 1rem;
+}
+
+.signUpLink{
+    color: rgb(87, 83, 83);
+    text-decoration: none;
+    margin-top: 2rem;
+}
+
+.loginLink{
+    color: rgb(87, 83, 83);
+    text-decoration: none;
+    margin-top: 5rem;
+}
+
+.otherSection{
+    overflow: hidden;
+    border-radius: 0 20px 20px 0;
+}
+.otherSection img{
+    height: 100%;
+    width: 100%;
+    object-fit: cover;
+}
+
+button{
+    text-transform: uppercase;
+    color: white;
+    font-weight: 600;
+    font-size: 1rem;
 }

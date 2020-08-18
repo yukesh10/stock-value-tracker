@@ -12,26 +12,50 @@
   </head>
   <body>
     <div class="container">
-      <form method="POST" action="login">
-        <div>
-          <label for="email">Email Address</label>
-          <input name="email" id="email" type="text" required />
-        </div>
-        <div>
-          <label for="password">Password</label>
-          <input name="password" id="password" type="password" required />
-        </div>
-        <div>
-          <label for="verifyPassword">Verify password</label>
-          <input
-            name="verifyPassword"
-            id="verifyPassword"
-            type="password"
-            required
-          />
-        </div>
-        <button type="submit">Signup</button>
-      </form>
+      <div class="formSection">
+        <h1>Stock Value Tracker</h1>
+        <h3>Sign up your account</h3>
+        <form method="POST" action="signup">
+          <div>
+            <input
+              name="email"
+              id="email"
+              type="text"
+              placeholder="Email Address"
+              required
+            />
+          </div>
+          <div>
+            <input
+              name="password"
+              id="password"
+              type="password"
+              placeholder="Password"
+              required
+            />
+          </div>
+          <div>
+            <input
+              name="verifypassword"
+              id="verifypassword"
+              type="password"
+              placeholder="Verify Password"
+              required
+            />
+          </div>
+          <button type="submit">Signup</button>
+        </form>
+        <% if (error == true){ %>
+        <p class="errorPassword">Password does not match!</p>
+        <% } %>
+        <a href="/login" class="link signUpLink">Already have an account?</a>
+      </div>
+      <div class="otherSection">
+        <img
+          src="https://images.unsplash.com/photo-1462206092226-f46025ffe607?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1353&q=80"
+          alt="login Image"
+        />
+      </div>
     </div>
   </body>
 </html>

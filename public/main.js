@@ -12,16 +12,26 @@ userInput.addEventListener("keypress", addStockOnEnter);
 addBtn.addEventListener("click", checkInput)
 stockTable.addEventListener("click", deleteStock);
 
-// setInterval(getData, 3000);
-// function getData(){
-//     console.log("data added!")
-//     let xhr = new XMLHttpRequest();
-//     xhr.open("GET", '/dataFromDatabase', true);
-//     xhr.send();
-//     xhr.onload = function(){
-//         console.log(xhr.response);
-//     }
-// };
+setInterval(getData, 10000);
+function getData(e){
+    console.log("get data!")
+    let tableBody = document.querySelectorAll(".tableBody");
+    let xhr = new XMLHttpRequest();
+    xhr.open("GET", '/dataFromDatabase', true);
+    xhr.send();
+    xhr.onload = function(){
+        const jsonResponse = JSON.parse(xhr.response);
+        for (let row = 0; row < tableBody.length; row++){
+            tableBody[row].getElementsByTagName("td")[0].innerText = jsonResponse[row].stockName;
+            tableBody[row].getElementsByTagName("td")[1].innerText = jsonResponse[row].companyName;
+            tableBody[row].getElementsByTagName("td")[2].innerText = jsonResponse[row].price;
+            tableBody[row].getElementsByTagName("td")[3].innerText = jsonResponse[row].change;
+            tableBody[row].getElementsByTagName("td")[4].innerText = jsonResponse[row].volume;
+            tableBody[row].getElementsByTagName("td")[5].innerText = jsonResponse[row].min_value;
+            tableBody[row].getElementsByTagName("td")[6].innerText = jsonResponse[row].max_value;
+        }
+    }
+};
 function checkInput(e){
     console.log("test");
     console.log(maxValueInput.value);

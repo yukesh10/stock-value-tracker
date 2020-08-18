@@ -1,11 +1,36 @@
+if (process.env.NODE_ENV !== 'production'){
+    require('dotenv').config()
+}
+
 // dependecies
 const request = require("request-promise");
 const cheerio = require("cheerio");
 const express = require("express");
 const bodyParser = require('body-parser');
+const methodOverride = require('method-override');
 var mongoose = require('mongoose');
 // const webData = require('./webdata.js')
 const cors = require('cors');
+const bcrypt = require('bcrypt');
+const passport = require('passport');
+const initializePassword = require('./password-config');
+initializePassword(passport, 
+    async (email) => {
+    let user = await userModel.find({emailAddress: email})
+    return user
+}, 
+async (id) => {
+    let user = await userModel.find({_id: id})
+    return user
+});
+
+const livereload = require("livereload");
+var connectLivereload = require("connect-livereload");
+const flash = require('express-flash');
+const session = require('express-session');
+
+var liveReloadServer = livereload.createServer();
+liveReloadServer.watch('public');
 
 // starting server and using all necessary tools
 const app = express();
@@ -14,14 +39,24 @@ app.use(bodyParser.urlencoded({
     extended: true
 }))
 app.use(cors({origin: '*'}))
+app.use(connectLivereload());
 // css and js is in public folder
 app.use(express.static('public'));
+app.use(flash())
+app.use(session({
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false
+}))
+app.use(passport.initialize())
+app.use(passport.session())
+app.use(methodOverride('_method'))
 // the view engine is ejs
 app.set("view engine", "ejs");
 
 
 // connecting to the database
-var mongoDB = 'mongodb+srv://stock_database_user:GjXCFDZzd9OKNGcn@cluster0.eeevv.mongodb.net/stockDB?retryWrites=true&w=majority';
+var mongoDB = process.env.DATABASE;
 mongoose.connect(mongoDB, {useNewUrlParser: true, useUnifiedTopology: true }, ()=> {
     console.log("database connected!!");
 });
@@ -50,36 +85,40 @@ var stockModelSchema = new schema({
         required: true
     }
 })
+
+var userSchema = new schema({
+    emailAddress: {
+        type: String,
+        required: true
+    },
+    password: {
+        type: String,
+        required: true
+    }
+})
+
 // compile model from schema
 var stockModel = mongoose.model('stockModel', stockModelSchema);
+var userModel = mongoose.model('userModel', userSchema);
 
-// setInterval(continuouslyUpdate, 10000);
+setInterval(continuouslyUpdate, 10000);
 // continuouslyUpdate();
 
 // post and get functions
-app.get('/', async function(req, res){
+app.get('/', checkAuthenticated, async function(req, res){
     // get data from the database
     console.log("get called");
-    let allStocks;
-    await stockModel.find({}, function(err, stocks){
-        if (err){
-            console.log("Error reading the data..");
-            console.log(err);
-        }
-        else{
-            allStocks = stocks;
-        }
-    })
+    let allStocks = await stockModel.find({});
     // render "index.ejs"
     res.render('index.ejs', {allStocks: allStocks});
 })
 
-app.get('/dataFromDatabase', async function(req, res){
+app.get('/dataFromDatabase', checkAuthenticated, async function(req, res){
     let allStocks = await getDataForCurrentUser();
     res.send(allStocks);
 })
 
-app.post('/addStock', async function(req, res){
+app.post('/addStock', checkAuthenticated, async function(req, res){
     // get information regarding the stock
     if (Number.parseFloat(req.body.max_value) > Number.parseFloat(req.body.min_value)){
         let data = await getData(req.body.stock)
@@ -94,42 +133,60 @@ app.post('/addStock', async function(req, res){
             min_value: Number.parseFloat(req.body.min_value),
             max_value: Number.parseFloat(req.body.max_value)
         })
-        // save the new model instance in the database
-        await stock_instance.save(function(err, stock){
-            if (err){
-                console.log("Something went wrong!!");
-            }
-            else{
-                console.log("stock added!");
-                console.log(stock);
-            }
-        })
+        let addedStock = await stock_instance.save();
+        console.log(addedStock);
     }
     // redirect to main page
     console.log("redirected!");
     res.redirect('/')
 })
 
-app.post('/removeStock', async function(req, res){
+app.post('/removeStock', checkAuthenticated, async function(req, res){
     let removeData = JSON.parse(Object.keys(req.body));
-    await stockModel.findOneAndDelete({stockName: removeData.stockName, min_value: Number.parseFloat(removeData.minValue), max_value: Number.parseFloat(removeData.maxValue)}, function(err, stock){
-        if (err){
-            console.log("Error finding the stock to remove");
-            console.log(err);
+    let removedStock = await stockModel.findOneAndDelete({stockName: removeData.stockName, min_value: Number.parseFloat(removeData.minValue), max_value: Number.parseFloat(removeData.maxValue)})
+    console.log(removedStock)
+})
+
+app.get('/login', checkNotAuthenticated, function(req, res){
+    res.render('login.ejs', {error: false});
+})
+
+app.post('/login', checkNotAuthenticated, passport.authenticate('local', {
+    successRedirect: '/',
+    failureRedirect: '/login',
+    failureFlash: true
+}))
+
+app.get('/signup', checkNotAuthenticated, function(req, res){
+    res.render('signup.ejs', {error: false})
+})
+
+app.post('/signup', checkNotAuthenticated, async function(req, res){
+    try{
+        if (req.body.password === req.body.verifypassword){
+            const hashedPassword = await bcrypt.hash(req.body.password, 10); 
+            let user_instance = new userModel({
+                emailAddress: req.body.email,
+                password: hashedPassword
+            })
+            let registeredUser = await user_instance.save();
+            console.log(registeredUser);
+            res.redirect('/login')
         }
         else{
-            console.log("Find and remove successful");
-            console.log(stock)
+            res.render('signup.ejs', {error: true});
         }
-    })
+    }
+    catch(err){
+        console.log(err);
+        res.register('/signup');
+    }
+    
 })
 
-app.get('/login', function(req, res){
-    res.render('login.ejs');
-})
-
-app.get('/signup', function(req, res){
-    res.render('signup.ejs')
+app.delete('/logout', (req, res) => {
+    req.logOut();
+    res.redirect('/login');
 })
 
 app.listen(3000, function(){
@@ -137,7 +194,7 @@ app.listen(3000, function(){
 });
 
 async function continuouslyUpdate(){
-    await stockModel.find({}, (err, stock)=>{
+    let allStocks = await stockModel.find({}, (err, stock)=>{
         if (err){
             console.log("Error in continuously finding data");
             console.log(err);
@@ -147,35 +204,34 @@ async function continuouslyUpdate(){
                 let data = await getData(s.stockName);
                 if (s.price !== Number.parseFloat(data[0].price)){
                     // update the instance in the database
-                    stockModel.updateMany({stockName: s.stockName}, {$set: {price: data[0].price, change: data[0].change, volume: data[0].volume}}, function(err, stock){
-                        if (err){
-                            console.log("error updating stock values");
-                            console.log(err);
-                        }
-                        else{
-                            console.log("values updated!");
-                            console.log(stock);
-                        }
-                    })
+                    let updatedStock = await stockModel.updateMany({stockName: s.stockName}, {$set: {price: data[0].price, change: data[0].change, volume: data[0].volume}})
+                    console.log(updatedStock);
                 }
-                console.log("No change Found!");
+                else{
+                    // console.log("not updated!");
+                }
             })
         }
     })
 }
 
 async function getDataForCurrentUser(){
-    let allStocks;
-    await stockModel.find({}, function(err, stocks){
-        if (err){
-            console.log("Error reading the data..");
-            console.log(err);
-        }
-        else{
-            allStocks = stocks;
-        }
-    })
+    let allStocks= await stockModel.find({});
     return allStocks;
+}
+
+function checkAuthenticated(req, res, next){
+    if (req.isAuthenticated()){
+        return next()
+    }
+    res.redirect('login');
+}
+
+function checkNotAuthenticated(req, res, next){
+    if (req.isAuthenticated()){
+        res.redirect('/');
+    }
+    next()
 }
 
 // This is all webscripting codes
