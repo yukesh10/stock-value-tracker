@@ -15,4 +15,4 @@ Tools used:
 # How does this web application work?
 -> First of all, you have to create a account. <br />
 -> After you are logged in, you will be able to add stock, and specify the minimum and maximum value. <br />
--> The application will keep updating stock every 10 sec and if at any point, the price of the stock goes below the specified minimum value and above the specified maximum value, the application will email the user on the email address that is used to create an account. <br />
+-> The application will keep updating stock every 10 sec and if at any point, the price of the stock goes <strong> below the specified minimum value </strong> and <strong> above the specified maximum value </strong>, the application will email the user on the email address that is used to create an account. <br />
