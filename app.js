@@ -13,6 +13,8 @@ var mongoose = require('mongoose');
 const cors = require('cors');
 const bcrypt = require('bcrypt');
 const passport = require('passport');
+const nodemailer = require('nodemailer')
+
 const initializePassword = require('./password-config');
 initializePassword(passport, 
     async (email) => {
@@ -83,7 +85,8 @@ var stockModelSchema = new schema({
         type: Number,
         min: 0,
         required: true
-    }
+    },
+    sendEmail: Boolean
 })
 
 var userSchema = new schema({
@@ -108,13 +111,15 @@ setInterval(continuouslyUpdate, 10000);
 app.get('/', checkAuthenticated, async function(req, res){
     // get data from the database
     console.log("get called");
-    let allStocks = await stockModel.find({});
+    console.log(req.user[0].emailAddress)
+    let allStocks = await stockModel.find({emailAddress: req.user[0].emailAddress});
+    console.log(allStocks)
     // render "index.ejs"
     res.render('index.ejs', {allStocks: allStocks});
 })
 
 app.get('/dataFromDatabase', checkAuthenticated, async function(req, res){
-    let allStocks = await getDataForCurrentUser();
+    let allStocks = await getDataForCurrentUser(req.user[0].emailAddress);
     res.send(allStocks);
 })
 
@@ -122,19 +127,25 @@ app.post('/addStock', checkAuthenticated, async function(req, res){
     // get information regarding the stock
     if (Number.parseFloat(req.body.max_value) > Number.parseFloat(req.body.min_value)){
         let data = await getData(req.body.stock)
+        console.log(req.user);
+        if (data[0].price !== ''){
+            let stock_instance = new stockModel({
+                emailAddress: req.user[0].emailAddress,
+                stockName: req.body.stock,
+                companyName: data[0].companyName,
+                price: data[0].price,
+                change: data[0].change,
+                volume: data[0].volume,
+                min_value: Number.parseFloat(req.body.min_value),
+                max_value: Number.parseFloat(req.body.max_value),
+                sendEmail: false
+            })
+            let addedStock = await stock_instance.save();
+            console.log(addedStock);
+        }
+        console.log(data)
         // create an instance of model stockModel
-        let stock_instance = new stockModel({
-            emailAddress: "admin@admin.com",
-            stockName: req.body.stock,
-            companyName: req.body.stock,
-            price: data[0].price,
-            change: data[0].change,
-            volume: data[0].volume,
-            min_value: Number.parseFloat(req.body.min_value),
-            max_value: Number.parseFloat(req.body.max_value)
-        })
-        let addedStock = await stock_instance.save();
-        console.log(addedStock);
+        
     }
     // redirect to main page
     console.log("redirected!");
@@ -143,7 +154,7 @@ app.post('/addStock', checkAuthenticated, async function(req, res){
 
 app.post('/removeStock', checkAuthenticated, async function(req, res){
     let removeData = JSON.parse(Object.keys(req.body));
-    let removedStock = await stockModel.findOneAndDelete({stockName: removeData.stockName, min_value: Number.parseFloat(removeData.minValue), max_value: Number.parseFloat(removeData.maxValue)})
+    let removedStock = await stockModel.findOneAndDelete({emailAddress: req.user[0].emailAddress, stockName: removeData.stockName, min_value: Number.parseFloat(removeData.minValue), max_value: Number.parseFloat(removeData.maxValue)})
     console.log(removedStock)
 })
 
@@ -204,8 +215,15 @@ async function continuouslyUpdate(){
                 let data = await getData(s.stockName);
                 if (s.price !== Number.parseFloat(data[0].price)){
                     // update the instance in the database
-                    let updatedStock = await stockModel.updateMany({stockName: s.stockName}, {$set: {price: data[0].price, change: data[0].change, volume: data[0].volume}})
-                    console.log(updatedStock);
+                    let updatedStock = await stockModel.updateMany({stockName: s.stockName}, {$set: {price: data[0].price, change: data[0].change, volume: data[0].volume}});
+                    let checkStock = await stockModel.find({stockName: s.stockName});
+                    checkStock.forEach(async (stock) => {
+                        if ((stock.price < stock.min_value || stock.price > stock.max_value) && stock.sendEmail === false){
+                            let emailSentStock = await stockModel.findOneAndUpdate({stockName: stock.stockName, emailAddress: stock.emailAddress}, {$set: {sendEmail: true}});
+                            let emailSent = sendEmail(stock.emailAddress, stock.stockName, stock.price);
+                            console.log(emailSent);
+                        }
+                    })
                 }
                 else{
                     // console.log("not updated!");
@@ -215,8 +233,8 @@ async function continuouslyUpdate(){
     })
 }
 
-async function getDataForCurrentUser(){
-    let allStocks= await stockModel.find({});
+async function getDataForCurrentUser(user){
+    let allStocks= await stockModel.find({emailAddress: user});
     return allStocks;
 }
 
@@ -232,6 +250,33 @@ function checkNotAuthenticated(req, res, next){
         res.redirect('/');
     }
     next()
+}
+
+async function sendEmail(emailAddress, stockName, currentPrice){
+    let transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+            user: process.env.EMAIL,
+            pass: process.end.PASSWORD
+        }
+    });
+
+    let mailOptions = {
+        from: 'Stock Value Tracker',
+        to: emailAddress,
+        subject: 'Stock value has gone beyond the set limit',
+        text: `Hello ${emailAddress},
+            The ${stockName} has is currently $${currentPrice}.
+            - Stock Value Tracker`
+    } 
+
+    transporter.sendMail(mailOptions, function(error, info){
+        if (error){
+            console.log(error)
+        } else{
+            console.log("Email sent: " + info.response);
+        }
+    })
 }
 
 // This is all webscripting codes
@@ -259,12 +304,14 @@ async function getData(stockName){
         });
     
         let $ = cheerio.load(response);
+        let companyName = $('div[class="D(ib) "] > h1').text()
         let price = $('div[class="D(ib) Mend(20px)"] > span:nth-child(1)').text();
         let change =$('div[class="D(ib) Mend(20px)"] > span:nth-child(2)').text();
         change = change.slice(0, change.indexOf(' '));
+        companyName = companyName.slice(0, companyName.indexOf('('))
         let volume = $('table[class="W(100%)"] >tbody > tr:nth-child(7) > td:nth-child(2)').text();
-    
         stockData.push({
+            companyName,
             price,
             change,
             volume
