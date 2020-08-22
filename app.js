@@ -258,7 +258,7 @@ async function sendEmail(emailAddress, stockName, currentPrice){
         service: 'gmail',
         auth: {
             user: process.env.EMAIL,
-            pass: process.end.PASSWORD
+            pass: process.env.PASSWORD
         }
     });
 
