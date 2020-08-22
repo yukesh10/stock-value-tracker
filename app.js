@@ -1,8 +1,6 @@
 if (process.env.NODE_ENV !== 'production'){
-    console.log(require('dotenv').config())
+    require('dotenv').config()
 }
-
-console.log("Process: " + JSON.stringify(process.env));
 
 // dependecies
 const request = require("request-promise");
@@ -31,7 +29,7 @@ async (id) => {
 const livereload = require("livereload");
 var connectLivereload = require("connect-livereload");
 const flash = require('express-flash');
-const session = require('express-session');
+const session = require('cookie-session');
 
 var liveReloadServer = livereload.createServer();
 liveReloadServer.watch('public');
@@ -131,6 +129,12 @@ app.post('/addStock', checkAuthenticated, async function(req, res){
         let data = await getData(req.body.stock)
         console.log(req.user);
         if (data[0].price !== ''){
+            let emailBoolean = false;
+            if (data[0].price < Number.parseFloat(req.body.min_value) || data[0].price > Number.parseFloat(req.body.max_value)){
+                let emailSent = await sendEmail(req.user[0].emailAddress, req.body.stock, data[0].price);
+                console.log(emailSent)
+                emailBoolean = true;
+            }
             let stock_instance = new stockModel({
                 emailAddress: req.user[0].emailAddress,
                 stockName: req.body.stock,
@@ -140,7 +144,7 @@ app.post('/addStock', checkAuthenticated, async function(req, res){
                 volume: data[0].volume,
                 min_value: Number.parseFloat(req.body.min_value),
                 max_value: Number.parseFloat(req.body.max_value),
-                sendEmail: false
+                sendEmail: emailBoolean
             })
             let addedStock = await stock_instance.save();
             console.log(addedStock);
@@ -202,8 +206,8 @@ app.delete('/logout', (req, res) => {
     res.redirect('/login');
 })
 
-app.listen(process.env.PORT, function(){
-    console.log("Server has started!!");    
+app.listen(process.env.PORT || 3000, function(){
+    console.log(`Server has started at port ${process.env.PORT}`);    
 });
 
 async function continuouslyUpdate(){
@@ -216,15 +220,20 @@ async function continuouslyUpdate(){
             stock.forEach(async (s)=>{
                 let data = await getData(s.stockName);
                 // console.log(data)
+                // console.log(data[0].price, s.price);
                 if (s.price !== Number.parseFloat(data[0].price)){
                     // update the instance in the database
                     let updatedStock = await stockModel.updateMany({stockName: s.stockName}, {$set: {price: data[0].price, change: data[0].change, volume: data[0].volume}});
                     let checkStock = await stockModel.find({stockName: s.stockName});
                     checkStock.forEach(async (stock) => {
+                        // console.log(stock.price, stock.min_value, stock.max_value, stock.sendEmail)
                         if ((stock.price < stock.min_value || stock.price > stock.max_value) && stock.sendEmail === false){
                             let emailSentStock = await stockModel.findOneAndUpdate({stockName: stock.stockName, emailAddress: stock.emailAddress}, {$set: {sendEmail: true}});
-                            let emailSent = sendEmail(stock.emailAddress, stock.stockName, stock.price);
+                            let emailSent = await sendEmail(stock.emailAddress, stock.stockName, stock.price);
                             console.log(emailSent);
+                        }
+                        else if ((stock.price > stock.min_value || stock.price < stock.max_value) && stock.sendEmail === true){
+                            let emailSentStock = await stockModel.findOneAndUpdate({stockName: stock.stockName, emailAddress: stock.emailAddress}, {$set: {sendEmail: false}});
                         }
                     })
                 }
