@@ -2,7 +2,7 @@ if (process.env.NODE_ENV !== 'production'){
     console.log(require('dotenv').config())
 }
 
-console.log("Process: " + process.env);
+console.log("Process: " + JSON.stringify(process.env));
 
 // dependecies
 const request = require("request-promise");
