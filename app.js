@@ -2,6 +2,8 @@ if (process.env.NODE_ENV !== 'production'){
     require('dotenv').config()
 }
 
+console.log("Process: " + process.env);
+
 // dependecies
 const request = require("request-promise");
 const cheerio = require("cheerio");
