@@ -213,6 +213,7 @@ async function continuouslyUpdate(){
         else{
             stock.forEach(async (s)=>{
                 let data = await getData(s.stockName);
+                // console.log(data)
                 if (s.price !== Number.parseFloat(data[0].price)){
                     // update the instance in the database
                     let updatedStock = await stockModel.updateMany({stockName: s.stockName}, {$set: {price: data[0].price, change: data[0].change, volume: data[0].volume}});
