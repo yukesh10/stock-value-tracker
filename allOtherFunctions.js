@@ -10,8 +10,6 @@ async function continuouslyUpdate(stockModel){
         else{
             stock.forEach(async (s)=>{
                 let data = await webScraping.getData(s.stockName);
-                // console.log(data)
-                // console.log(data[0].price, s.price);
                 if (s.price !== Number.parseFloat(data[0].price)){
                     // update the instance in the database
                     let updatedStock = await stockModel.updateMany({stockName: s.stockName}, {$set: {price: data[0].price, change: data[0].change, volume: data[0].volume}});
@@ -23,7 +21,7 @@ async function continuouslyUpdate(stockModel){
                             let emailSent = await sendEmail(stock.emailAddress, stock.stockName, stock.price);
                             console.log(emailSent);
                         }
-                        else if ((stock.price > stock.min_value || stock.price < stock.max_value) && stock.sendEmail === true){
+                        else if (stock.price > stock.min_value && stock.price < stock.max_value && stock.sendEmail === true){
                             let emailSentStock = await stockModel.findOneAndUpdate({stockName: stock.stockName, emailAddress: stock.emailAddress}, {$set: {sendEmail: false}});
                         }
                     })
