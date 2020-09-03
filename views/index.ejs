@@ -13,6 +13,12 @@
       integrity="sha512-xA6Hp6oezhjd6LiLZynuukm80f8BoZ3OpcEYaqKoCV3HKQDrYjDE1Gu8ocxgxoXmwmSzM4iqPvCsOkQNiu41GA=="
       crossorigin="anonymous"
     />
+    <link
+      rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+      integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
+      crossorigin="anonymous"
+    />
     <link rel="stylesheet" type="text/css" href="style.css" />
     <title>Stock Value Tracker</title>
   </head>
@@ -53,34 +59,55 @@
         <button class="addBtn">Add</button>
       </form>
       <p class="errorInput"></p>
-      <table id="stocks">
-        <tr id="tableHead">
-          <th>Symbol</th>
-          <th>Company Name</th>
-          <th>Price</th>
-          <th>Change</th>
-          <th>Volume</th>
-          <th>Min Value</th>
-          <th>Max Value</th>
-          <th>Action</th>
-        </tr>
-        <% if (allStocks){ %> <% allStocks.forEach((stock)=>{ %>
-        <tr class="tableBody">
-          <td><%= stock.stockName %></td>
-          <td><%= stock.companyName %></td>
-          <td><%= stock.price %></td>
-          <td><%= stock.change %></td>
-          <td><%= stock.volume %></td>
-          <td><%= stock.min_value %></td>
-          <td><%= stock.max_value %></td>
-          <td class="lastCol">
-            <div class="updateBtn"><i class="fas fa-sync"></i></div>
-            <div class="deleteBtn"><i class="fa fa-trash"></i></div>
-          </td>
-        </tr>
-        <% }) %> <% } %>
+      <!-- <div class="table-responsive"> -->
+      <table id="stocks" class="table">
+        <thead>
+          <tr id="tableHead">
+            <th scope="col">Symbol</th>
+            <th scope="col">Company Name</th>
+            <th scope="col">Price</th>
+            <th scope="col">Change</th>
+            <th scope="col">Volume</th>
+            <th scope="col">Min Value</th>
+            <th scope="col">Max Value</th>
+            <th scope="col">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if (allStocks){ %> <% allStocks.forEach((stock)=>{ %>
+          <tr class="tableBody">
+            <td><%= stock.stockName %></td>
+            <td><%= stock.companyName %></td>
+            <td><%= stock.price %></td>
+            <td><%= stock.change %></td>
+            <td><%= stock.volume %></td>
+            <td><%= stock.min_value %></td>
+            <td><%= stock.max_value %></td>
+            <td class="lastCol">
+              <div class="updateBtn"><i class="fas fa-sync"></i></div>
+              <div class="deleteBtn"><i class="fa fa-trash"></i></div>
+            </td>
+          </tr>
+          <% }) %> <% } %>
+        </tbody>
       </table>
+      <!-- </div> -->
     </div>
     <script src="main.js"></script>
+    <script
+      src="https://code.jquery.com/jquery-3.2.1.slim.min.js"
+      integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+      integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+      integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+      crossorigin="anonymous"
+    ></script>
   </body>
 </html>

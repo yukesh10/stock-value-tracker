@@ -94,13 +94,9 @@ input:focus, button:focus{
 
 #stocks td, #stocks th{
     border: 1px solid #a888a8;
-    padding: 8px;
-    width: 10rem;
 }
 
 #stocks #tableHead{
-    padding-top: 12px;
-    padding-bottom: 12px;
     background-color: #6db973;
 }
 
@@ -142,4 +138,58 @@ input:focus, button:focus{
     font-weight: 600;
     display: none;
     margin-bottom: 20px;
+}
+
+@media only screen and (max-width: 1000px){
+    .input{
+       display: flex;
+        flex-direction: column;
+    }
+
+    .input input, .input button{
+        width: 70vw;
+        margin: 0.3rem 0rem;
+    }
+
+    header h1{
+        font-size: 5vw;
+    }
+
+    header button{
+        padding: 1.5vw;
+        border-radius: 10px;
+        width: 15vw;
+    }
+}
+
+@media only screen and (max-width: 770px){
+    #stocks td:nth-child(2), #stocks td:nth-child(4), #stocks td:nth-child(5), 
+    #stocks th:nth-child(2), #stocks th:nth-child(4), #stocks th:nth-child(5){
+        display:none;
+    }
+
+    #stocks{
+        font-size: 3vw;
+    }
+}
+
+@media only screen and (max-width: 480px){
+    header button{
+        padding: 1.5vw;
+        border-radius: 10px;
+        width: 20vw;
+    }
+}
+
+@media only screen and (max-width: 340px){
+    #stocks{
+        font-size: 2.25vw;
+    }
+
+    header button{
+        padding: 1.2vw;
+        border-radius: 10px;
+        width: 20vw;
+        font-size: 0.9rem;
+    }
 }
